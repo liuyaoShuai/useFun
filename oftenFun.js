@@ -272,4 +272,18 @@ function ajax(url,fnSucc)
         };
 }
 
+//各种浏览器事件代理
+function addEvent(element,type,handler){
+	if(element.addEventListener){
+		element.addEventListener(type,handler,false);
+	}else if(element.attchEvent){
+		element['temp'+type+handler] = handler;
+		element[type+handler] = function(){
+			element['temp'+type+handler].apply(element);
+		}
+	}else{
+		element['on'+type] = handler;
+	}
+}
+
 

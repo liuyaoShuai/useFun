@@ -276,7 +276,7 @@ function ajax(url,fnSucc)
 function addEvent(element,type,handler){
 	if(element.addEventListener){
 		element.addEventListener(type,handler,false);
-	}else if(element.attchEvent){
+	}else if(element.attachEvent){
 		element['temp'+type+handler] = handler;
 		element[type+handler] = function(){
 			element['temp'+type+handler].apply(element);
@@ -284,6 +284,88 @@ function addEvent(element,type,handler){
 	}else{
 		element['on'+type] = handler;
 	}
+}
+
+//比较通用的事件侦听器函数
+function normalEvent(){
+	var eventsFun  = new Object();
+	eventFun.Event = {
+		readyEvent : function(fn){
+			if(fn==null){
+				fn = document;
+			}
+			var oldonload = window.onload;
+			if(typeof window.onload != 'function'){
+				window.onload = fn;
+			} else {
+				window.onload = function(){
+					oldonload();
+					fn();
+				}
+			}
+		},
+		
+		addEvent : function(element,type,handler){
+			if(element.addEventListener){
+				//事件类型 需要执行的函数/是否捕捉
+				element.addEventListener(type,handler,false)
+			}else if(element.attachEvent){
+				element.attachEvent("on"+type,function(){
+					handler.call(element);
+				})
+			} else {
+				element['on'+ type] = handler;
+			}
+		},
+		//移除事件
+		removeEvent : function(element,type,handler){
+			if(element.removeEventListener){
+				//事件类型 需要执行的函数/是否捕捉
+				element.removeEventListener(type,handler,false)
+			}else if(element.detachEvent){
+				element.detachEvent("on"+type,handler);
+			} else {
+				element['on'+ type] = null;
+			}
+		},
+		
+		//阻止事件（主要是事件冒泡，因为IE不支持事件捕获）
+		stopPropagation : function(event){
+			if(event.stopPropagation){
+				event.stopPropagation();
+			}else{
+				event.cancelBubble = true;
+			}
+		},
+		//取消事件默认行为
+		preventDefault : function(event){
+			if(event.preventDefault){
+				event.preventDefault();
+			}else{
+				event.returnValue = false;
+			}
+		},
+		//获取事件目标
+		getTarget : function(event){
+			return event.target || event.srcElement;
+		},
+		
+		//获取event对象的引用，取到事件的所有信息，确保随时能使用event
+		getEvent:function(event){
+			var event = event || window.event;
+			if(!event){
+				var c = this.getEvent.caller;
+				while(c){
+					event = c.arguments[0];
+					if(event && Event == event.constructor){
+						break;
+					}
+					
+					c = c.caller;
+				}
+			}
+			return event;
+		}
 }
 
 

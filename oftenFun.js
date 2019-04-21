@@ -25,6 +25,35 @@
 	   return `${daya}-${month}-${day}`;
   }
   
+  // 13位时间戳转日期
+var getLocalTime = function(nS) {
+  //return new Date(parseInt(nS)).toLocaleString().replace(/:\d{1,2}$/,' ');
+  var date = new Date(nS);
+  var Y = date.getFullYear() + '/';
+  var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '/';
+  var D = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate()) + ' ';
+  var h = date.getHours() + ':';
+  var m = (date.getMinutes() < 10 ? '0' + (date.getMinutes()) : date.getMinutes()) + ' ';
+  //var s = date.getSeconds();
+  return Y + M + D + h + m;
+}
+
+
+/** 
+ * 获取距离今天的N天的日期  N可正可负
+ * @param {Number} interval default 0  -n 表示前几天  n表示后几天
+ */
+function getIntervalDate(interval = 0) {
+    interval = Number(interval)
+    let currentDate = new Date();
+    currentDate.setDate(currentDate.getDate() + interval);
+    let year = currentDate.getFullYear();
+    let month = (currentDate.getMonth() + 1) < 10 ? "0" + (currentDate.getMonth() + 1) : (currentDate.getMonth() + 1);
+    let day = currentDate.getDate() < 10 ? "0" + currentDate.getDate() : currentDate.getDate();
+    return year + "-" + month + "-" + day;
+}
+
+  
   //抓取页面某一类元素
   function getElement(){
 	  var domList = document.getElementsByTagName('input');
@@ -132,6 +161,14 @@
 	 return this.url;
  }
  
+ // 获取网址的get参数
+var GET = function(name) {
+  var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+  var r = window.location.search.substr(1).match(reg);
+  if (r != null) return (r[2]);
+  return null;
+}
+ 
  
  //traversal(document) 循环目标节点  进行你需要的操作
  function traversal(node) {
@@ -164,7 +201,56 @@ function sort(element){
 	}
 }
 
-//判断浏览器类型以及版本信息  {brower:'chrome',ver:'63'}
+
+/**
+ * 返回浏览器版本
+ */
+ 
+function getExplorerInfo() {
+    let explorer = window.navigator.userAgent.toLowerCase();
+    // ie
+    if (explorer.indexOf("msie") >= 0) {
+        let ver = explorer.match(/msie ([\d.]+)/)[1];
+        return {
+            type: "IE",
+            version: ver
+        };
+    }
+    // firefox
+    else if (explorer.indexOf("firefox") >= 0) {
+        let ver = explorer.match(/firefox\/([\d.]+)/)[1];
+        return {
+            type: "Firefox",
+            version: ver
+        };
+    }
+    // Chrome
+    else if (explorer.indexOf("chrome") >= 0) {
+        let ver = explorer.match(/chrome\/([\d.]+)/)[1];
+        return {
+            type: "Chrome",
+            version: ver
+        };
+    }
+    // Opera
+    else if (explorer.indexOf("opera") >= 0) {
+        let ver = explorer.match(/opera.([\d.]+)/)[1];
+        return {
+            type: "Opera",
+            version: ver
+        };
+    }
+    // Safari
+    else if (explorer.indexOf("Safari") >= 0) {
+        let ver = explorer.match(/version\/([\d.]+)/)[1];
+        return {
+            type: "Safari",
+            version: ver
+        };
+    }
+}
+
+//判断浏览器类型以及版本信息  {brower:'chrome',ver:'63'}  对以上代码进行优化简写
 function getBrowserInfo(){
     var Sys = {};
     var ua = navigator.userAgent.toLowerCase();
@@ -174,6 +260,7 @@ function getBrowserInfo(){
     Sys.ver = m[2];
     return Sys;
 }
+
 
 //原生书写ajax过程
 function jsAjax(){
@@ -367,5 +454,260 @@ function normalEvent(){
 			return event;
 		}
 }
+
+// 判断数组元素是否重复
+isArrRepeat(arr) {
+  var _arr = arr.sort();
+  console.log(_arr)
+  for (var i = 0; i < _arr.length; i++) {
+    if (_arr[i] === _arr[i + 1]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+// 判断数据类型
+function type(elem) {
+  if (elem == null) {
+    return elem + '';
+  }
+  return toString.call(elem).replace(/[\[\]]/g, '').split(' ')[1].toLowerCase();
+}
+
+// 数组对象排序  data.sort(keysrt("firstWord"));
+var keysrt = function(propertyName) {
+  return function(object1, object2) {
+    var value1 = object1[propertyName];
+    var value2 = object2[propertyName];
+    if (value2 < value1) {
+      return 1;
+    } else if (value2 > value1) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
+}
+
+
+/**
+ * 设置样式
+ * @param {HTMLElement} elem 需要设置的节点
+ * @param {Object} prop      CSS属性，键值对象
+ */
+function setStyle(elem, prop) {
+    if (!elem) {
+        return false
+    };
+    for (let i in prop) {
+        elem.style[i] = prop[i];
+    }
+};
+
+
+
+/**
+ * 获取鼠标光标相对于整个页面的位置
+ * @return {String} 值
+ */
+function getX(e) {
+    e = e || window.event;
+    let _left = document.documentElement.scrollLeft || document.body.scrollLeft;
+    return e.pageX || e.clientX + _left;
+}
+ 
+function getY(e) {
+    e = e || window.event;
+    let _top = document.documentElement.scrollTop || document.body.scrollTop;
+    return e.pageY || e.clientY + _top;
+}
+
+
+/**
+ * 千分位显示 常用于价格   三大框架 有过滤器可以实现
+ * @param {Number} num
+ */
+function toThousands(num) {
+    return parseFloat(num).toFixed(2).replace(/(\d{1,3})(?=(\d{3})+(?:\.))/g, "$1,");
+}
+console.log(toThousands(252121321.25))
+ 
+ 
+/**
+ * 动态加载 CSS 样式文件
+ */
+function LoadStyle(url) {
+    try {
+        document.createStyleSheet(url);
+    } catch (e) {
+        let cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.type = 'text/css';
+        cssLink.href = url;
+        let head = document.getElementsByTagName('head')[0];
+        head.appendChild(cssLink);
+    }
+}
+
+//针对移动设备
+
+/**
+ * 判断是否移动设备
+ */
+function isMobile() {
+    if (typeof this._isMobile === 'boolean') {
+        return this._isMobile;
+    }
+    let screenWidth = this.getScreenWidth();
+    let fixViewPortsExperiment = rendererModel.runningExperiments.FixViewport ||
+        rendererModel.runningExperiments.fixviewport;
+    let fixViewPortsExperimentRunning = fixViewPortsExperiment &&
+        (fixViewPortsExperiment.toLowerCase() === "new");
+    if (!fixViewPortsExperiment) {
+        if (!this.isAppleMobileDevice()) {
+            screenWidth = screenWidth / window.devicePixelRatio;
+        }
+    }
+    let isMobileScreenSize = screenWidth < 600;
+    let isMobileUserAgent = false;
+    this._isMobile = isMobileScreenSize && this.isTouchScreen();
+    return this._isMobile;
+}
+ 
+ 
+ 
+/**
+ * 判断是否移动设备访问
+ */
+function isMobileUserAgent() {
+    return (/iphone|ipod|android.*mobile|windows.*phone|blackberry.*mobile/i
+        .test(window.navigator.userAgent.toLowerCase()));
+}
+ 
+ 
+/**
+ * 判断是否苹果移动设备访问
+ */
+function isAppleMobileDevice() {
+    return (/iphone|ipod|ipad|Macintosh/i.test(navigator.userAgent
+        .toLowerCase()));
+}
+ 
+/**
+ * 判断是否安卓移动设备访问
+ */
+function isAndroidMobileDevice() {
+    return (/android/i.test(navigator.userAgent.toLowerCase()));
+}
+
+ 
+/**
+ * 判断是否在安卓上的谷歌浏览器
+ */
+function isNewChromeOnAndroid() {
+    if (isAndroidMobileDevice()) {
+        let userAgent = navigator.userAgent.toLowerCase();
+        if ((/chrome/i.test(userAgent))) {
+            let parts = userAgent.split('chrome/');
+ 
+            let fullVersionString = parts[1].split(" ")[0];
+            let versionString = fullVersionString.split('.')[0];
+            let version = parseInt(versionString);
+ 
+            if (version >= 27) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/********************************************************获取document部分结构各种高度宽度*********************************************************************/
+/**
+ * 获取页面高度
+ */
+function getPageHeight() {
+    let g = document,
+        a = g.body,
+        f = g.documentElement,
+        d = g.compatMode == "BackCompat" ?
+        a :
+        g.documentElement;
+    return Math.max(f.scrollHeight, a.scrollHeight, d.clientHeight);
+}
+ 
+/**
+ * 获取页面scrollLeft
+ */
+function getPageScrollLeft() {
+    return document.documentElement.scrollLeft || document.body.scrollLeft;
+}
+ 
+ 
+/**
+ * 获取页面宽度
+ */
+function getPageWidth() {
+    let g = document,
+        a = g.body,
+        f = g.documentElement,
+        d = g.compatMode == "BackCompat" ?
+        a :
+        g.documentElement;
+    return Math.max(f.scrollWidth, a.scrollWidth, d.clientWidth);
+}
+ 
+/**
+ * 获取页面scrollTop
+ */
+function getPageScrollTop() {
+    return document.documentElement.scrollTop || document.body.scrollTop;
+}
+ 
+/**
+ * 获取页面可视高度
+ */
+function getPageViewHeight() {
+    let d = document,
+        a = d.compatMode == "BackCompat" ?
+        d.body :
+        d.documentElement;
+    return a.clientHeight;
+}
+ 
+ 
+function MouseWheelHandle (obj,handle){
+    let info = navigator.userAgent;
+    let down = null;
+    if(info.indexOf("Firefox") !=-1){
+        obj.addEventListener("DOMMouseScroll",function(event){
+            let ev = event ||window.event;
+                if(ev.detail>0){
+                    down = true;
+                }else{
+                    down = false;            
+                }
+                handle(down,ev);
+                handle.apply(obj,[down,ev]);
+        },false);
+    }else{
+        obj.onmousewheel = function(event){
+            let ev = event || window.event;
+            if(ev.wheelDelta >0){
+                down =false;
+            }else{
+                down = true;
+            }
+            handle(down,ev);
+            handle.apply(obj,[down,ev]);
+            handle.call(obj,down,ev);
+        }
+    }
+}
+
+
+
 
 

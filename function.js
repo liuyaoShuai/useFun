@@ -372,4 +372,17 @@ export class UtilService {
         return this.formatTime(targetTime)+"(UTC"+timeZone+")";
     }
 }
+		  
+preload.guard.ts
+import { Observable, of } from 'rxjs';
+import { delay, flatMap } from 'rxjs/operators';
+import { PreloadingStrategy, Route } from '@angular/router';
+
+export class PreloadGuard implements PreloadingStrategy{
+    preload(route:Route,load:Function): Observable<any>{
+        return route.data && route.data.preload
+            //延迟2s预加载
+            ? of(true).pipe(delay(2000)).pipe(flatMap((_:boolean)=>load())): of(null)
+    }
+}
 

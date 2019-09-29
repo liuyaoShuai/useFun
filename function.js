@@ -386,3 +386,120 @@ export class PreloadGuard implements PreloadingStrategy{
     }
 }
 
+//downloadService
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable, EventEmitter } from '@angular/core';
+@Injectable({
+  providedIn: 'root'
+})
+export class DownloadService {
+
+  /**
+   *Creates an instance of DownloadService.
+    // * @param {Http} http http服务
+    // * @memberof DownloadService
+   */
+  public eventEmit: any;
+  constructor(private http: HttpClient) {
+    this.eventEmit = new EventEmitter();
+  }
+
+  /**
+  * 文件GET下载 帮助链接：https://stackoverflow.com/questions/35138424/how-do-i-download-a-file-with-angular2
+  *
+  * @example
+  * this.downloadService.download(url, 'download.txt')
+  *
+  * @param url 下载文档URL方法名相同地址
+  * @param fileName 下载文件名称，带后缀，默认名称"download.txt"
+  * @param responseType 文件下载类型，默认类型"application/zip"
+  *
+  */
+  download(url: string, fileName: string = 'download.zip', responseType: string = 'application/zip') {
+    // 构建下载Header类型
+    const headers = new HttpHeaders({
+      'Content-Type': responseType,
+      'Accept': responseType
+    });
+
+    return this.http.get(url, { headers: headers, responseType: 'blob' })
+      .subscribe(
+        blob => {
+          this.downloadWithBlob(blob, fileName);
+        },
+        error => {
+          // TODO
+        }
+      );
+  }
+
+
+  /**
+ * 文件下载 支持post请求的下载
+ *
+ * @example
+ * this.downloadService.downloadPost(url, 'download.txt', data)
+ *
+ * @param url 下载文档URL地址
+ * @param fileName 下载文件名称，带后缀，默认名称"download.txt"
+ * @param options RequestOptionsArgs
+ * @param responseType 文件下载类型，默认类型"application/zip"
+ * // TODO:待改进
+ */
+  downloadPost(url: string, fileName: string = 'download.zip', data: any,
+    responseType: string = 'application/zip') {
+    // 构建下载Header类型
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': responseType
+    });
+    return this.http.post(url, data, { headers: headers, withCredentials: true, responseType: 'blob' })
+      .subscribe(
+        blob => {
+          this.downloadWithBlob(blob, fileName);
+        },
+        error => {
+          // TODO
+        }
+      );
+  }
+  /**
+  * 通过Bolb下载文件
+  * @param blob 文件转换为Bolb数据对象
+  * @param fileName 下载时保存的文件名称
+  */
+  downloadWithBlob(blob: Blob, fileName: string) {
+    // 兼容IE和Edge
+    if (window.navigator.msSaveBlob) {
+      window.navigator.msSaveOrOpenBlob(blob, fileName);
+      return;
+    }
+
+    // 创建URL地址
+    const url = URL.createObjectURL(blob);
+
+    const aTag = document.createElement('a');
+
+    // 设置下载文件所需熟悉
+    aTag.setAttribute('target', '_blank');
+    aTag.setAttribute('style', 'display: none;');
+    aTag.setAttribute('href', url);
+    aTag.setAttribute('download', fileName);
+
+    // 插入到DOM
+    document.body.appendChild(aTag);
+
+    // 触发下载操作
+    aTag.click();
+
+    // 用完后开启多线程销毁
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      aTag.remove();
+    }, 0);
+
+    this.eventEmit.emit(true);
+  }
+}
+
+

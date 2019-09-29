@@ -824,3 +824,71 @@ export class DownloadService {
   }
 }
 
+// 大文件切片 上传
+ // 大文件上传函数
+  uploadBigFile() {
+    this.fileSize = this.files[0].size;        // 总大小
+    this.shardCount = Math.ceil(this.fileSize / this.BYTES_PER_CHUNK);  // 总片数
+    this.totalSlices = this.shardCount;
+    this.succeed = 0;
+	// （当前是第几个，当前文件大小,分片的总片数,设定的每个分片的大小）   所有大小单位均换算为bit
+    let form = this.getFormDataBigFile(0, this.fileSize, this.shardCount, this.BYTES_PER_CHUNK);
+
+    this.fileUpload(this.uploadConfig.url, form).subscribe(data => {
+      this.succeed++;
+      if (data.error_code === '200' && !data.data) {
+        let form = this.getFormDataBigFile(this.succeed, this.fileSize, this.shardCount, this.BYTES_PER_CHUNK);
+        this.fileUploadSyn(form);
+      } else {
+        // 异常场景  关闭上传框   弹出错误消息框
+        this.completeUpload.emit(data);
+      }
+    }, error => {
+      console.log('Error', error);
+    });
+  }
+
+  // 大文件构造formdata数据
+  getFormDataBigFile(i, size, shardCount, shardSize): any {
+    let current = i;
+    let start = i * shardSize;
+    let end = Math.min(size, start + shardSize);
+
+    // 构造一个表单，FormData是HTML5新增的
+    let form = new FormData();
+    // slice方法用于切出文件的一部分
+    form.append('file', new File([this.files[0].slice(start, end)], this.files[0].name, { type: '', lastModified: Date.now() }));
+    form.append('chunks', shardCount);
+    form.append('chunk', current + 1);
+    form.append('fileSize', this.files[0].size);
+    for (const key of Object.keys(this.uploadConfig.reqParams)) {
+      form.append(key, this.uploadConfig.reqParams[key]);
+    }
+
+    return form;
+  }
+
+  // 大文件上传函数
+  fileUploadSyn(form) {
+    this.fileUpload(this.uploadConfig.url, form).subscribe(data => {
+      if (data.error_code === '200') {
+        this.succeed++;
+        // 判断上传结束
+        if (data.data) {
+          // 分片上传结束  触发完成上传事件
+          this.completeUpload.emit(data);
+          return;
+        } else {
+          // 分片上传未结束   递归调用
+          const forms = this.getFormDataBigFile(this.succeed, this.fileSize, this.shardCount, this.BYTES_PER_CHUNK);
+          this.fileUploadSyn(forms);
+        }
+      } else {
+        // 异常场景  关闭上传框   弹出错误消息框
+        this.completeUpload.emit(data);
+      }
+    }, error => {
+      console.log('Error', error);
+    }
+    );
+  }

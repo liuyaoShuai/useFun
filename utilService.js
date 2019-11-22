@@ -258,3 +258,47 @@ export class UtilService {
     }
 }
 
+                      export class CacheStore {
+  store = new Map();
+  getCacheData(key, defaultData) {
+    if (!this.store.has(key)) {
+      this.store.set(key, defaultData);
+    }
+    return this.store.get(key);
+  }
+  getCacheDataByFactory(key, defaultDataFactory: () => any) {
+    if (!this.store.has(key)) {
+      this.store.set(key, defaultDataFactory());
+    }
+    return this.store.get(key);
+  }
+  async getAsyncCacheDataByFactory(key, defaultDataFactory: () => Promise<any>) {
+    if (!this.store.has(key)) {
+      this.store.set(key, await defaultDataFactory());
+    }
+    return this.store.get(key);
+  }
+  clear() {
+    this.store.clear();
+  }
+  delete(key): boolean {
+    return this.store.delete(key);
+  }
+  forEach(callbackfn: (value, key, map: Map<any, any>) => void, thisArg?: any) {
+    this.store.forEach(callbackfn, thisArg);
+  }
+  get(key) {
+    return this.store.get(key);
+  }
+  has(key): boolean {
+    return this.store.has(key);
+  }
+  set(key, value): this {
+    this.store.set(key, value);
+    return this;
+  }
+  size(): number {
+    return this.store.size;
+  }
+}
+
